@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from main import main
+from main import start
 
 st.title("TCPro to DXF converter")
 # st.write(
