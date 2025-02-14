@@ -9,7 +9,7 @@ st.title("TCPro to DXF converter")
 
 uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
 if uploaded_file is not None:
-    dxf_data = main(uploaded_file)  # Get binary DXF data
+    dxf_data = start(uploaded_file)  # Get binary DXF data
 
     if dxf_data:
         st.download_button(
