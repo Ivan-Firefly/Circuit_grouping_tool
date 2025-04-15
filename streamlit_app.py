@@ -4,23 +4,24 @@ import tempfile
 import os
 import settings
 
-# Default settings (could be imported from settings.py too)
-DEFAULT_SETTINGS = {
-    "SECTIONS_PER_PANEL": 3,
-    "OUTGOINGS_PER_SECTION": 10,
-    "SPARE_OUTGOINGS_PER_SECTION": 1,
-    "MAX_CIRCUIT_CB_CURRENT": 20.0,
-    "MAX_DISTANCE_TO_PANEL": 150,
-    "MAX_DISTANCE_BETWEEN_CIRCUITS": 50,
-    "PANEL_BLOCK_SIZE": 10000,
-    "CIRCUIT_BLOCK_SIZE": 5000,
-    "BLOCK_TEXT_SIZE": 2000
-}
+# Pull all relevant keys from settings.py
+SETTING_KEYS = [
+    "SECTIONS_PER_PANEL",
+    "OUTGOINGS_PER_SECTION",
+    "SPARE_OUTGOINGS_PER_SECTION",
+    "MAX_CIRCUIT_CB_CURRENT",
+    "MAX_DISTANCE_TO_PANEL",
+    "MAX_DISTANCE_BETWEEN_CIRCUITS",
+    "PANEL_BLOCK_SIZE",
+    "CIRCUIT_BLOCK_SIZE",
+    "BLOCK_TEXT_SIZE",
+]
 
-# Initialize settings in session state
-for key, value in st.session_state.items():
-    if hasattr(settings, key):
-        setattr(settings, key, value)
+# Initialize session_state with values from settings.py
+for key in SETTING_KEYS:
+    if key not in st.session_state:
+        st.session_state[key] = getattr(settings, key)
+
 
 st.set_page_config(page_title="CGT - Circuit Grouping Tool", layout="centered")
 st.title("CGT - Circuit Grouping Tool")
