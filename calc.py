@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import math
 import ezdxf
 from itertools import combinations
@@ -515,10 +514,6 @@ def optimize_panels(result_df, max_distance=MAX_DISTANCE_TO_PANEL, sections_per_
 
     return optimized
 
-
-import math
-import ezdxf
-
 def generate_dxf_with_blocks(result_df, output_file):
     """Generate DXF file with panels and circuits using BLOCKS for cleaner structure."""
     doc = ezdxf.new('R2010')
@@ -636,4 +631,4 @@ def main(input_file, output_excel, output_dxf):
 
 
 
-# main(INPUT_FILE, OUTPUT_FILE_XLSX, OUTPUT_FILE_DXF)
+main(INPUT_FILE, OUTPUT_FILE_XLSX, OUTPUT_FILE_DXF)
