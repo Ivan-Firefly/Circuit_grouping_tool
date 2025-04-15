@@ -8,7 +8,7 @@ import os
 TEMPLATE_PATH = "input.xlsx"  # Make sure this path is correct
 
 st.set_page_config(page_title="CGT - Circui grouping tool", layout="centered")
-st.title("Circui grouping tool")
+st.title("CGT - Circuit Grouping Tool")
 
 # =========================
 # 🔹 Section: Download Template
@@ -40,7 +40,7 @@ def reset_session_state():
     for key in ["uploaded_filename", "xlsx_bytes", "dxf_bytes"]:
         st.session_state.pop(key, None)
 
-st.subheader("📎 Upload your Excel file")
+st.subheader("🖇 Upload your Excel file")
 uploaded_file = st.file_uploader(" ", type="xlsx")
 
 # Detect new file and reset state
