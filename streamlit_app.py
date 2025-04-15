@@ -7,20 +7,20 @@ import os
 
 TEMPLATE_PATH = "input.xlsx"  # Make sure this path is correct
 
-st.set_page_config(page_title="Excel DXF Processor", layout="centered")
-st.title("📐 Excel to DXF Processor")
+st.set_page_config(page_title="CGT - Circui grouping tool", layout="centered")
+st.title("Circui grouping tool")
 
 # =========================
 # 🔹 Section: Download Template
 # =========================
-st.subheader("📥 Download Input Template")
+st.subheader("📥 Input Template")
 
 if os.path.exists(TEMPLATE_PATH):
     with open(TEMPLATE_PATH, "rb") as f:
         template_data = f.read()
 
     st.download_button(
-        label="📄 Download XLSX Template",
+        label="📄 Download XLSX",
         data=template_data,
         file_name="template.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -40,7 +40,7 @@ def reset_session_state():
     for key in ["uploaded_filename", "xlsx_bytes", "dxf_bytes"]:
         st.session_state.pop(key, None)
 
-st.subheader(" Upload your Excel file")
+st.subheader("📎 Upload your Excel file")
 uploaded_file = st.file_uploader(" ", type="xlsx")
 
 # Detect new file and reset state
@@ -80,14 +80,14 @@ if "xlsx_bytes" in st.session_state and "dxf_bytes" in st.session_state:
     st.success("✅ Processing complete. Download your files below:")
 
     st.download_button(
-        label="📥 Download XLSX Result",
+        label="📄 Download XLSX",
         data=st.session_state["xlsx_bytes"],
         file_name="result.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
     st.download_button(
-        label="📥 Download DXF File",
+        label="✏ Download DXF",
         data=st.session_state["dxf_bytes"],
         file_name="result.dxf",
         mime="application/dxf"
