@@ -11,7 +11,7 @@ MAX_DISTANCE_TO_PANEL = 150 # in meters
 MAX_DISTANCE_BETWEEN_CIRCUITS = 50  # in meters
 
 # Files
-INPUT_FILE = 'inpuпеt.xlsx'
+INPUT_FILE = 'input.xlsx'
 OUTPUT_FILE_XLSX = 'Grouping.xlsx'
 OUTPUT_FILE_DXF = 'Grouping.dxf'
 
