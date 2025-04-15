@@ -65,7 +65,13 @@ if uploaded_file and st.button("Start"):
         output_dxf_path = os.path.join(tempfile.gettempdir(), "output_result.dxf")
 
         # Run your main function
-        calc_main(input_file_path, output_xlsx_path, output_dxf_path)
+        calc_main(
+            input_file_path,
+            output_xlsx_path,
+            output_dxf_path,
+            settings={key: st.session_state[key] for key in DEFAULT_SETTINGS}
+        )
+
 
         # Save outputs in session state
         with open(output_xlsx_path, "rb") as f1:
