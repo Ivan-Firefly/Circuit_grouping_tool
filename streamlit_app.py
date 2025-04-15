@@ -1,22 +1,94 @@
+# app.py
 import streamlit as st
-import pandas as pd
-from main import start
+from calc import main as calc_main
+import tempfile
+import os
 
-st.title("TCPro to DXF converter")
-# st.write(
-#     "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
-# )
 
-uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
+TEMPLATE_PATH = "input.xlsx"  # Make sure this path is correct
+
+st.set_page_config(page_title="Excel DXF Processor", layout="centered")
+st.title("📐 Excel to DXF Processor")
+
+# =========================
+# 🔹 Section: Download Template
+# =========================
+st.subheader("📥 Download Input Template")
+
+if os.path.exists(TEMPLATE_PATH):
+    with open(TEMPLATE_PATH, "rb") as f:
+        template_data = f.read()
+
+    st.download_button(
+        label="📄 Download XLSX Template",
+        data=template_data,
+        file_name="template.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+else:
+    st.warning("⚠️ Template file not found in the project directory.")
+
+
+st.divider()
+
+# =========================
+# 🔹 Section: File Upload and Processing
+# =========================
+
+# Function to reset session state
+def reset_session_state():
+    for key in ["uploaded_filename", "xlsx_bytes", "dxf_bytes"]:
+        st.session_state.pop(key, None)
+
+st.subheader(" Upload your Excel file")
+uploaded_file = st.file_uploader(" ", type="xlsx")
+
+# Detect new file and reset state
 if uploaded_file is not None:
-    dxf_data = start(uploaded_file)  # Get binary DXF data
+    if (
+        "uploaded_filename" not in st.session_state
+        or uploaded_file.name != st.session_state["uploaded_filename"]
+    ):
+        reset_session_state()
+        st.session_state["uploaded_filename"] = uploaded_file.name
 
-    if dxf_data:
-        st.download_button(
-            label="Download DXF",
-            data=dxf_data,
-            file_name="output.dxf",
-            mime="application/dxf"
-        )
-    else:
-        st.error("Error: Failed to generate DXF file.")
+# Process the file
+if uploaded_file and st.button("Start"):
+    with st.spinner("Groping..."):
+        # Save input file temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as input_tmp:
+            input_tmp.write(uploaded_file.read())
+            input_file_path = input_tmp.name
+
+        # Define output paths
+        output_xlsx_path = os.path.join(tempfile.gettempdir(), "output_result.xlsx")
+        output_dxf_path = os.path.join(tempfile.gettempdir(), "output_result.dxf")
+
+        # Run your main function
+        calc_main(input_file_path, output_xlsx_path, output_dxf_path)
+
+        # Save outputs in session state
+        with open(output_xlsx_path, "rb") as f1:
+            st.session_state["xlsx_bytes"] = f1.read()
+        with open(output_dxf_path, "rb") as f2:
+            st.session_state["dxf_bytes"] = f2.read()
+
+# =========================
+# 🔹 Section: Download Results
+# =========================
+if "xlsx_bytes" in st.session_state and "dxf_bytes" in st.session_state:
+    st.success("✅ Processing complete. Download your files below:")
+
+    st.download_button(
+        label="📥 Download XLSX Result",
+        data=st.session_state["xlsx_bytes"],
+        file_name="result.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+    st.download_button(
+        label="📥 Download DXF File",
+        data=st.session_state["dxf_bytes"],
+        file_name="result.dxf",
+        mime="application/dxf"
+    )
