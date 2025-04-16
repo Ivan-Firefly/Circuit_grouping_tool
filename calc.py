@@ -2,11 +2,7 @@ import pandas as pd
 import math
 import ezdxf
 from itertools import combinations
-from settings import *
-
-# converting to meters
-MAX_DISTANCE_TO_PANEL = MAX_DISTANCE_TO_PANEL *1000
-MAX_DISTANCE_BETWEEN_CIRCUITS = MAX_DISTANCE_BETWEEN_CIRCUITS *1000
+import settings
 
 
 def manhattan_distance(p1, p2):
@@ -24,7 +20,7 @@ def calculate_centroid(points):
     return (x, y, z)
 
 
-def is_valid_reassignment(circuit, target_panel, panels_data, max_distance=MAX_DISTANCE_TO_PANEL):
+def is_valid_reassignment(circuit, target_panel, panels_data, max_distance):
     """Check if reassigning a circuit to another panel is valid"""
     panel_coords = (target_panel['North_X'], target_panel['East_Y'], target_panel['Elevation_Z'])
     circuit_coords = (circuit['North_X'], circuit['East_Y'], circuit['Elevation_Z'])
@@ -53,8 +49,8 @@ def is_valid_reassignment(circuit, target_panel, panels_data, max_distance=MAX_D
     return target_section is not None
 
 
-def group_circuits(df, max_distance=MAX_DISTANCE_TO_PANEL, max_outgoing_cb_current=MAX_CIRCUIT_CB_CURRENT, max_distance_between_circuits=MAX_DISTANCE_BETWEEN_CIRCUITS,
-                   sections_per_panel=3, max_outgoing_per_section=OUTGOINGS_PER_SECTION-SPARE_OUTGOINGS_PER_SECTION):
+def group_circuits(df, max_distance, max_outgoing_cb_current, max_distance_between_circuits,
+                   sections_per_panel, max_outgoing_per_section):
     """Group circuits into panels based on proximity and constraints"""
 
     # Create a copy of the input dataframe
@@ -310,7 +306,7 @@ def group_circuits(df, max_distance=MAX_DISTANCE_TO_PANEL, max_outgoing_cb_curre
     return circuits
 
 
-def optimize_panels(result_df, max_distance=MAX_DISTANCE_TO_PANEL, sections_per_panel=SECTIONS_PER_PANEL, max_outgoing_per_section=OUTGOINGS_PER_SECTION-SPARE_OUTGOINGS_PER_SECTION):
+def optimize_panels(result_df, max_distance, sections_per_panel, max_outgoing_per_section):
     """Optimize panel utilization based on the specified constraints"""
     optimized = result_df.copy()
 
@@ -460,7 +456,7 @@ def optimize_panels(result_df, max_distance=MAX_DISTANCE_TO_PANEL, sections_per_
             circuit_coords = (far_circuit['North_X'], far_circuit['East_Y'], far_circuit['Elevation_Z'])
             distance = manhattan_distance(panel_coords, circuit_coords)
 
-            if distance < best_distance and is_valid_reassignment(far_circuit, panel_info, optimized):
+            if distance < best_distance and is_valid_reassignment(far_circuit, panel_info, optimized,max_distance):
                 best_distance = distance
                 best_panel = panel_info
 
@@ -514,16 +510,14 @@ def optimize_panels(result_df, max_distance=MAX_DISTANCE_TO_PANEL, sections_per_
 
     return optimized
 
-def generate_dxf_with_blocks(result_df, output_file):
+def generate_dxf_with_blocks(result_df, output_file,panel_side,circuit_radius,text_height):
     """Generate DXF file with panels and circuits using BLOCKS for cleaner structure."""
     doc = ezdxf.new('R2010')
     msp = doc.modelspace()
     block_defs = doc.blocks
 
     # Constants
-    panel_side = PANEL_BLOCK_SIZE
-    circuit_radius = CIRCUIT_BLOCK_SIZE
-    text_height = BLOCK_TEXT_SIZE
+
 
 
     # Create panel block (equilateral triangle centered at origin)
@@ -606,19 +600,33 @@ def generate_dxf_with_blocks(result_df, output_file):
     return True
 
 
-def main(input_file, output_excel, output_dxf):
+def main(input_file, output_excel, output_dxf, settings_override=None):
+    s = settings_override or {}
+
+    SECTIONS_PER_PANEL = s.get("SECTIONS_PER_PANEL", settings.SECTIONS_PER_PANEL)
+    MAX_OUTGOINGS_PER_SECTION=s.get("OUTGOINGS_PER_SECTION", settings.OUTGOINGS_PER_SECTION)-s.get("SPARE_OUTGOINGS_PER_SECTION", settings.SPARE_OUTGOINGS_PER_SECTION)
+
+    MAX_CIRCUIT_CB_CURRENT = s.get("MAX_CIRCUIT_CB_CURRENT", settings.MAX_CIRCUIT_CB_CURRENT)
+    MAX_DISTANCE_TO_PANEL = s.get("MAX_DISTANCE_TO_PANEL", settings.MAX_DISTANCE_TO_PANEL)*1000
+    MAX_DISTANCE_BETWEEN_CIRCUITS = s.get("MAX_DISTANCE_BETWEEN_CIRCUITS", settings.MAX_DISTANCE_BETWEEN_CIRCUITS)*1000
+
+    PANEL_BLOCK_SIZE = s.get("PANEL_BLOCK_SIZE", settings.PANEL_BLOCK_SIZE)
+    CIRCUIT_BLOCK_SIZE = s.get("CIRCUIT_BLOCK_SIZE", settings.CIRCUIT_BLOCK_SIZE)
+    BLOCK_TEXT_SIZE = s.get("BLOCK_TEXT_SIZE", settings.BLOCK_TEXT_SIZE)
+
     """Main function to execute the circuit grouping workflow"""
     # Load data
     df = pd.read_excel(input_file)
 
     # Group circuits into panels
-    result = group_circuits(df)
+    result = group_circuits(df,MAX_DISTANCE_TO_PANEL, MAX_CIRCUIT_CB_CURRENT, MAX_DISTANCE_BETWEEN_CIRCUITS,
+                   SECTIONS_PER_PANEL, MAX_OUTGOINGS_PER_SECTION)
 
     # Optimize panels
-    optimized_result = optimize_panels(result)
+    optimized_result = optimize_panels(result, MAX_DISTANCE_TO_PANEL, SECTIONS_PER_PANEL, MAX_OUTGOINGS_PER_SECTION)
 
     # Generate DXF file
-    generate_dxf_with_blocks(optimized_result, output_dxf)
+    generate_dxf_with_blocks(optimized_result, output_dxf,PANEL_BLOCK_SIZE,CIRCUIT_BLOCK_SIZE,BLOCK_TEXT_SIZE)
 
     # Save results to Excel
     optimized_result.to_excel(output_excel, index=False)
@@ -631,4 +639,4 @@ def main(input_file, output_excel, output_dxf):
 
 
 
-main(INPUT_FILE, OUTPUT_FILE_XLSX, OUTPUT_FILE_DXF)
+# main("input.xlsx", 'dsf.xlsx', 'sdfd.dxf')
