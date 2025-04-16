@@ -140,21 +140,27 @@ with tab1:
     if "xlsx_bytes" in st.session_state and "dxf_bytes" in st.session_state:
         st.success("✅ Processing complete. Download your files below:")
 
-        st.download_button(
-            label="📄 Download XLSX",
-            data=st.session_state["xlsx_bytes"],
-            file_name="result.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        col1, col2 = st.columns([3, 1])
 
-        st.download_button(
-            label="✏ Download DXF",
-            data=st.session_state["dxf_bytes"],
-            file_name="result.dxf",
-            mime="application/dxf"
-        )
+        with col1:
+            st.download_button(
+                label="📄 Download XLSX",
+                data=st.session_state["xlsx_bytes"],
+                file_name="Grouping.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
-        # Add a button to start over if needed
-        if st.button("♻ Process Another File"):
-            reset_session_state()
-            st.rerun()
+            st.download_button(
+                label="✏ Download DXF",
+                data=st.session_state["dxf_bytes"],
+                file_name="Grouping.dxf",
+                mime="application/dxf"
+            )
+
+        # Add a button to start over if needed - in the right column
+        with col2:
+            # Add some vertical space to align with the download buttons
+            st.write("")
+            if st.button("♲ Process Another File"):
+                reset_session_state()
+                st.rerun()
