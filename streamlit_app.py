@@ -56,7 +56,7 @@ with tab2:
                                                                       value=st.session_state[
                                                                           "SPARE_OUTGOINGS_PER_SECTION"])
 
-    st.session_state["MAX_CB_CURRENT"] = st.number_input("Max Circuit CB Current (A)", min_value=1.0,
+    st.session_state["MAX_CB_CURRENT"] = st.number_input("Max CB Current (A) considering SF", min_value=1.0,
                                                                  value=st.session_state["MAX_CB_CURRENT"])
 
     st.session_state["MAX_CIRCUIT_PER_GROUP"] = st.number_input("Max Circuits Per Group", min_value=1,
