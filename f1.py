@@ -820,28 +820,28 @@ def execute_full_process(input_file, output_file,
 
 
 # Example usage
-if __name__ == "__main__":
-    # Change these parameters as needed
+# if __name__ == "__main__":
+#     # Change these parameters as needed
 
-    input_file = "input1.xlsx"
-    output_file = "output.xlsx"
-    dxf_outputfile = 'layout.dxf'
+#     input_file = "input1.xlsx"
+#     output_file = "output.xlsx"
+#     dxf_outputfile = 'layout.dxf'
 
-    # Algorithm parameters
-    chain_type = "daisy"  # or "MB"
-    panel_type = "locked"  # or "locked"
-    sections_per_panel = 1
-    max_outgoings_per_section = 20
-    max_distance_limit = 100000
-    init_radius = 5000
-    radius_step = 5000
-    max_iterations = 3
-    max_current_per_group = 20
-    max_circuit_per_group = 4
-    panel_side = 1000
-    square_size = 300
-    circuit_radius = 300
-    text_height = 250
+#     # Algorithm parameters
+#     chain_type = "daisy"  # or "MB"
+#     panel_type = "locked"  # or "locked"
+#     sections_per_panel = 1
+#     max_outgoings_per_section = 20
+#     max_distance_limit = 100000
+#     init_radius = 5000
+#     radius_step = 5000
+#     max_iterations = 3
+#     max_current_per_group = 20
+#     max_circuit_per_group = 4
+#     panel_side = 1000
+#     square_size = 300
+#     circuit_radius = 300
+#     text_height = 250
 
 
 
