@@ -56,19 +56,15 @@ with tab2:
                                                                       value=st.session_state[
                                                                           "SPARE_OUTGOINGS_PER_SECTION"])
 
-    st.session_state["MAX_CB_CURRENT"] = st.number_input("Max CB Current (A) considering SF", min_value=1.0,
+    st.session_state["MAX_CB_CURRENT"] = st.number_input("Max CB Current considering SF (A) ", min_value=1.0,
                                                                  value=st.session_state["MAX_CB_CURRENT"])
-
-    st.session_state["MAX_CIRCUIT_PER_GROUP"] = st.number_input("Max Circuits Per Group", min_value=1,
-                                                                value=st.session_state["MAX_CIRCUIT_PER_GROUP"])
-    st.subheader("Algorithm Configuration")
-    st.session_state["CHAIN_TYPE"] = st.selectbox("Chain Type",
-                                                  options=["daisy", "MB"],
-                                                  index=0 if st.session_state["CHAIN_TYPE"] == "daisy" else 1)
 
     st.session_state["PANEL_TYPE"] = st.selectbox("Panel Type",
                                                   options=["locked", "free"],
                                                   index=0 if st.session_state["PANEL_TYPE"] == "locked" else 1)
+    
+    st.subheader("Algorithm Configuration")
+   
 
     st.session_state["MAX_ITERATIONS"] = st.number_input("Max Iterations",
                                                          min_value=1,
@@ -87,6 +83,12 @@ with tab2:
     st.subheader("Limitations")
     st.session_state["MAX_DISTANCE_TO_PANEL"] = st.number_input("Max Distance to Panel", min_value=1,
                                                                 value=st.session_state["MAX_DISTANCE_TO_PANEL"])
+    
+    st.session_state["MAX_CIRCUIT_PER_GROUP"] = st.number_input("Max Circuits Per Group", min_value=1,
+                                                                value=st.session_state["MAX_CIRCUIT_PER_GROUP"])
+    st.session_state["CHAIN_TYPE"] = st.selectbox("Chain Type",
+                                                  options=["daisy", "MB"],
+                                                  index=0 if st.session_state["CHAIN_TYPE"] == "daisy" else 1)
 
     st.subheader("Dxf settings")
     st.session_state["PANEL_BLOCK_SIZE"] = st.number_input("Panel Block Size", min_value=1,
