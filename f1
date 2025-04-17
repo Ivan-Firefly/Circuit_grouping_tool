@@ -766,7 +766,7 @@ def execute_full_process(input_file, output_file,
                          chain_type='daisy', init_radius=5000, radius_step=5000,
                        max_iterations=5, max_current_per_group=20, max_circuit_per_group=5, panel_type='free', sections_per_panel=3,
                          max_outgoings_per_section=10, max_distance_limit=150000,dxf_outputfile='layout.dxf', panel_side=1000, square_size=300, circuit_radius=300, text_height=250,
-                         grouping=False):
+                         grouping=True):
     """Execute the full process: grouping, MST, remote index, and panel assignment"""
     # Step 1: Group circuits
     result_df = group_circuits(
@@ -800,10 +800,10 @@ def execute_full_process(input_file, output_file,
         final_df,
         dxf_outputfile,
         panel_side,
-        square_size,# Customize as needed
-        circuit_radius,  # Customize as needed
+        square_size,
+        circuit_radius,
         text_height,
-        grouping# Customize as needed
+        grouping
     )
 
 
@@ -846,13 +846,13 @@ if __name__ == "__main__":
 
 
 
-    final_result = execute_full_process(
-        input_file,
-        output_file,
-        chain_type=chain_type, init_radius=init_radius, radius_step=radius_step,
-        max_iterations=max_iterations, max_current_per_group=max_current_per_group,
-        max_circuit_per_group=max_circuit_per_group, panel_type=panel_type, sections_per_panel=sections_per_panel,
-        max_outgoings_per_section=max_outgoings_per_section, max_distance_limit=max_distance_limit,
-        dxf_outputfile=dxf_outputfile, panel_side=panel_side,square_size=square_size, circuit_radius=circuit_radius,
-        text_height=text_height
-    )
+    # final_result = execute_full_process(
+    #     input_file,
+    #     output_file,
+    #     chain_type=chain_type, init_radius=init_radius, radius_step=radius_step,
+    #     max_iterations=max_iterations, max_current_per_group=max_current_per_group,
+    #     max_circuit_per_group=max_circuit_per_group, panel_type=panel_type, sections_per_panel=sections_per_panel,
+    #     max_outgoings_per_section=max_outgoings_per_section, max_distance_limit=max_distance_limit,
+    #     dxf_outputfile=dxf_outputfile, panel_side=panel_side,square_size=square_size, circuit_radius=circuit_radius,
+    #     text_height=text_height,grouping=True
+    # )
