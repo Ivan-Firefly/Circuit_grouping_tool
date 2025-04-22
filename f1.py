@@ -3,6 +3,7 @@ import numpy as np
 import ezdxf
 import math
 
+
 def manhattan_distance(point1, point2):
     """Calculate Manhattan distance between two points"""
     return abs(point1[0] - point2[0]) + abs(point1[1] - point2[1]) + abs(point1[2] - point2[2])
@@ -83,8 +84,12 @@ def calculate_distances(circuits_group, chain_type):
 
 
 def group_circuits(input_file, chain_type, init_radius, radius_step,
-                   max_iterations, max_current_per_group, max_circuit_per_group):
+                   max_iterations, max_current_per_group, max_circuit_per_group, mb_phase):
     """Main function to group circuits based on proximity and constraints"""
+
+    if mb_phase == 'Three phase':
+        max_current_per_group = max_current_per_group * 3
+
     # Read input file
     df = pd.read_excel(input_file)
 
@@ -285,6 +290,7 @@ def process_groups_with_distances(result_df):
 
     return result_df, remote_index_mapping, group_to_idx, equidistant_points
 
+
 # ====================== PANEL ASSIGNMENT PROCESSING ====================== #
 
 def find_equidistant_between_points(points):
@@ -370,7 +376,7 @@ def assign_groups_to_panels(result_df, output_file, sections_per_panel, max_outg
             for group in unassigned_groups:
                 if group_info[group]['assigned']:
                     continue
-                outgoing_number_candidate=outgoing_number+1
+                outgoing_number_candidate = outgoing_number + 1
                 # Check control method compatibility
                 group_control_method = group_info[group]['control_method']
 
@@ -722,7 +728,7 @@ def generate_dxf_with_blocks(result_df, output_file, panel_side, square_size, ci
 
             group_blockref.add_auto_attribs({
                 key: str(first_circuit[key])
-                for key in ['Group', 'Panel', 'Section', 'Outgoing', 'Equidistant_Z','Control method']
+                for key in ['Group', 'Panel', 'Section', 'Outgoing', 'Equidistant_Z', 'Control method']
             })
 
             panel_entities.append(group_blockref)
@@ -742,7 +748,7 @@ def generate_dxf_with_blocks(result_df, output_file, panel_side, square_size, ci
                 blockref = msp.add_blockref('CIRCUIT_BLOCK', insert=circuit_insert, dxfattribs={'layer': layer_name})
                 blockref.add_auto_attribs({
                     key: str(circuit[key])
-                    for key in ['Circuit', 'Panel', 'Section', 'Outgoing', 'Group', 'Elevation_Z','Control method']
+                    for key in ['Circuit', 'Panel', 'Section', 'Outgoing', 'Group', 'Elevation_Z', 'Control method']
                 })
 
                 panel_entities.append(blockref)
@@ -761,11 +767,15 @@ def generate_dxf_with_blocks(result_df, output_file, panel_side, square_size, ci
 
     doc.saveas(output_file)
     return True
+
+
 # Combined execution function
 def execute_full_process(input_file, output_file,
                          chain_type='daisy', init_radius=5000, radius_step=5000,
-                       max_iterations=5, max_current_per_group=20, max_circuit_per_group=5, panel_type='free', sections_per_panel=3,
-                         max_outgoings_per_section=10, max_distance_limit=150000,dxf_outputfile='layout.dxf', panel_side=1000, square_size=300, circuit_radius=300, text_height=250,
+                         max_iterations=5, max_current_per_group=20, max_circuit_per_group=5, mb_phase='Single phase',
+                         panel_type='free', sections_per_panel=3,
+                         max_outgoings_per_section=10, max_distance_limit=150000, dxf_outputfile='layout.dxf',
+                         panel_side=1000, square_size=300, circuit_radius=300, text_height=250,
                          grouping=True):
     """Execute the full process: grouping, MST, remote index, and panel assignment"""
     # Step 1: Group circuits
@@ -776,9 +786,9 @@ def execute_full_process(input_file, output_file,
         radius_step,
         max_iterations,
         max_current_per_group,
-        max_circuit_per_group
+        max_circuit_per_group,
+        mb_phase
     )
-
 
     # Step 2: Process groups with MST and assign remote indices
     mst_result_df, remote_index_mapping, group_mapping, equidistant_points = process_groups_with_distances(
@@ -795,7 +805,6 @@ def execute_full_process(input_file, output_file,
         panel_type
     )
 
-
     dxf_result = generate_dxf_with_blocks(
         final_df,
         dxf_outputfile,
@@ -805,8 +814,6 @@ def execute_full_process(input_file, output_file,
         text_height,
         grouping
     )
-
-
 
     num_groups = final_df['Group'].nunique()
     num_panels = final_df['Panel'].nunique()
@@ -820,38 +827,36 @@ def execute_full_process(input_file, output_file,
 
 
 # Example usage
-# if __name__ == "__main__":
-#     # Change these parameters as needed
+if __name__ == "__main__":
+    # Change these parameters as needed
 
-#     input_file = "input1.xlsx"
-#     output_file = "output.xlsx"
-#     dxf_outputfile = 'layout.dxf'
+    input_file = "input.xlsx"
+    output_file = "output.xlsx"
+    dxf_outputfile = 'layout.dxf'
 
-#     # Algorithm parameters
-#     chain_type = "daisy"  # or "MB"
-#     panel_type = "locked"  # or "locked"
-#     sections_per_panel = 1
-#     max_outgoings_per_section = 20
-#     max_distance_limit = 100000
-#     init_radius = 5000
-#     radius_step = 5000
-#     max_iterations = 3
-#     max_current_per_group = 20
-#     max_circuit_per_group = 4
-#     panel_side = 1000
-#     square_size = 300
-#     circuit_radius = 300
-#     text_height = 250
-
-
-
+    # Algorithm parameters
+    chain_type = "daisy"  # or "MB"
+    panel_type = "free"  # or "locked"
+    sections_per_panel = 3
+    max_outgoings_per_section = 9
+    max_distance_limit = 150000
+    init_radius = 5000
+    radius_step = 5000
+    max_iterations = 3
+    max_current_per_group = 20
+    max_circuit_per_group = 4
+    panel_side = 1000
+    square_size = 300
+    circuit_radius = 300
+    text_height = 250
+    mb_phase = 'Three phase' # or "Three phase"
 
     # final_result = execute_full_process(
     #     input_file,
     #     output_file,
     #     chain_type=chain_type, init_radius=init_radius, radius_step=radius_step,
     #     max_iterations=max_iterations, max_current_per_group=max_current_per_group,
-    #     max_circuit_per_group=max_circuit_per_group, panel_type=panel_type, sections_per_panel=sections_per_panel,
+    #     max_circuit_per_group=max_circuit_per_group, mb_phase=mb_phase, panel_type=panel_type, sections_per_panel=sections_per_panel,
     #     max_outgoings_per_section=max_outgoings_per_section, max_distance_limit=max_distance_limit,
     #     dxf_outputfile=dxf_outputfile, panel_side=panel_side,square_size=square_size, circuit_radius=circuit_radius,
     #     text_height=text_height,grouping=True
