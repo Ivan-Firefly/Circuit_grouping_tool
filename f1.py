@@ -818,10 +818,10 @@ def execute_full_process(input_file, output_file,
     num_groups = final_df['Group'].nunique()
     num_panels = final_df['Panel'].nunique()
 
-    print(f"Process complete.")
+
     print(f"Created {num_groups} groups.")
     print(f"Created {num_panels} panels.")
-    print(f"Results saved to {output_file}")
+
 
     return final_df
 
@@ -851,13 +851,13 @@ if __name__ == "__main__":
     text_height = 250
     mb_phase = 'Three phase' # or "Three phase"
 
-    # final_result = execute_full_process(
-    #     input_file,
-    #     output_file,
-    #     chain_type=chain_type, init_radius=init_radius, radius_step=radius_step,
-    #     max_iterations=max_iterations, max_current_per_group=max_current_per_group,
-    #     max_circuit_per_group=max_circuit_per_group, mb_phase=mb_phase, panel_type=panel_type, sections_per_panel=sections_per_panel,
-    #     max_outgoings_per_section=max_outgoings_per_section, max_distance_limit=max_distance_limit,
-    #     dxf_outputfile=dxf_outputfile, panel_side=panel_side,square_size=square_size, circuit_radius=circuit_radius,
-    #     text_height=text_height,grouping=True
-    # )
+    final_result = execute_full_process(
+        input_file,
+        output_file,
+        chain_type=chain_type, init_radius=init_radius, radius_step=radius_step,
+        max_iterations=max_iterations, max_current_per_group=max_current_per_group,
+        max_circuit_per_group=max_circuit_per_group, mb_phase=mb_phase, panel_type=panel_type, sections_per_panel=sections_per_panel,
+        max_outgoings_per_section=max_outgoings_per_section, max_distance_limit=max_distance_limit,
+        dxf_outputfile=dxf_outputfile, panel_side=panel_side,square_size=square_size, circuit_radius=circuit_radius,
+        text_height=text_height,grouping=True
+    )
