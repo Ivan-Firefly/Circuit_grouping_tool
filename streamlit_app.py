@@ -2,6 +2,9 @@ import streamlit as st
 from f1 import execute_full_process
 import tempfile
 import os
+import sys
+import io
+from contextlib import redirect_stdout
 
 # Default values for all settings
 DEFAULT_VALUES = {
@@ -11,10 +14,11 @@ DEFAULT_VALUES = {
     "OUTGOINGS_PER_SECTION": 10,
     "SPARE_OUTGOINGS_PER_SECTION": 1,
     "MAX_CB_CURRENT": 20.0,
+    "MB_PHASE": "Single phase",
     "MAX_DISTANCE_TO_PANEL": 150000,
     "PANEL_BLOCK_SIZE": 1000,
     "CIRCUIT_BLOCK_SIZE": 300,
-    "GROUP_BLOCK_SIZE":400,
+    "GROUP_BLOCK_SIZE": 400,
     "BLOCK_TEXT_SIZE": 250,
     "INIT_RADIUS": 5000,
     "RADIUS_STEP": 5000,
@@ -23,15 +27,16 @@ DEFAULT_VALUES = {
     "DXF_GROUPING": True
 }
 
-
 # Initialize session_state with default values
 for key, value in DEFAULT_VALUES.items():
     if key not in st.session_state:
         st.session_state[key] = value
 
-# Initialize processing status
+# Initialize processing status and logs
 if "processing_complete" not in st.session_state:
     st.session_state.processing_complete = False
+if "terminal_output" not in st.session_state:
+    st.session_state.terminal_output = ""
 
 st.set_page_config(page_title="CGT - Circuit Grouping Tool", layout="centered")
 st.title("CGT - Circuit Grouping Tool")
@@ -57,14 +62,13 @@ with tab2:
                                                                           "SPARE_OUTGOINGS_PER_SECTION"])
 
     st.session_state["MAX_CB_CURRENT"] = st.number_input("Max CB Current considering SF (A) ", min_value=1.0,
-                                                                 value=st.session_state["MAX_CB_CURRENT"])
+                                                         value=st.session_state["MAX_CB_CURRENT"])
 
     st.session_state["PANEL_TYPE"] = st.selectbox("Panel Type",
                                                   options=["locked", "free"],
                                                   index=0 if st.session_state["PANEL_TYPE"] == "locked" else 1)
-    
+
     st.subheader("Algorithm Configuration")
-   
 
     st.session_state["MAX_ITERATIONS"] = st.number_input("Max Iterations",
                                                          min_value=1,
@@ -78,12 +82,15 @@ with tab2:
                                                       min_value=1000,
                                                       value=st.session_state["RADIUS_STEP"])
 
-
-
     st.subheader("Limitations")
+
+    st.session_state["MB_PHASE"] = st.selectbox("MB phase",
+                                                options=["Single phase", "Three phase"],
+                                                index=0 if st.session_state["MB_PHASE"] == "Single phase" else 1)
+
     st.session_state["MAX_DISTANCE_TO_PANEL"] = st.number_input("Max Distance to Panel", min_value=1,
                                                                 value=st.session_state["MAX_DISTANCE_TO_PANEL"])
-    
+
     st.session_state["MAX_CIRCUIT_PER_GROUP"] = st.number_input("Max Circuits Per Group", min_value=1,
                                                                 value=st.session_state["MAX_CIRCUIT_PER_GROUP"])
     st.session_state["CHAIN_TYPE"] = st.selectbox("Chain Type",
@@ -96,7 +103,7 @@ with tab2:
     st.session_state["CIRCUIT_BLOCK_SIZE"] = st.number_input("Circuit Block Size", min_value=1,
                                                              value=st.session_state["CIRCUIT_BLOCK_SIZE"])
     st.session_state["GROUP_BLOCK_SIZE"] = st.number_input("Group Block Size", min_value=1,
-                                                             value=st.session_state["GROUP_BLOCK_SIZE"])
+                                                           value=st.session_state["GROUP_BLOCK_SIZE"])
 
     st.session_state["BLOCK_TEXT_SIZE"] = st.number_input("Block Text Size", min_value=1,
                                                           value=st.session_state["BLOCK_TEXT_SIZE"])
@@ -128,7 +135,7 @@ with tab1:
 
     # File Upload Section
     def reset_session_state():
-        for key in ["uploaded_filename", "xlsx_bytes", "dxf_bytes"]:
+        for key in ["uploaded_filename", "xlsx_bytes", "dxf_bytes", "terminal_output"]:
             st.session_state.pop(key, None)
         st.session_state.processing_complete = False
 
@@ -149,7 +156,13 @@ with tab1:
         # Only show the Start button if file is uploaded
         if uploaded_file:
             if st.button("Start"):
+                # Create a placeholder for terminal output
+                terminal_output_placeholder = st.empty()
+
                 with st.spinner("Grouping..."):
+                    # Capture stdout to get terminal output
+                    stdout_buffer = io.StringIO()
+
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as input_tmp:
                         input_tmp.write(uploaded_file.read())
                         input_file_path = input_tmp.name
@@ -157,27 +170,34 @@ with tab1:
                     output_xlsx_path = os.path.join(tempfile.gettempdir(), "output_result.xlsx")
                     output_dxf_path = os.path.join(tempfile.gettempdir(), "output_result.dxf")
 
-                    # Use the execute_full_process function with all parameters
-                    execute_full_process(
-                        input_file_path,
-                        output_xlsx_path,
-                        chain_type=st.session_state["CHAIN_TYPE"],
-                        init_radius=st.session_state["INIT_RADIUS"],
-                        radius_step=st.session_state["RADIUS_STEP"],
-                        max_iterations=st.session_state["MAX_ITERATIONS"],
-                        max_current_per_group=st.session_state["MAX_CB_CURRENT"],
-                        max_circuit_per_group=st.session_state["MAX_CIRCUIT_PER_GROUP"],
-                        panel_type=st.session_state["PANEL_TYPE"],
-                        sections_per_panel=st.session_state["SECTIONS_PER_PANEL"],
-                        max_outgoings_per_section=st.session_state["OUTGOINGS_PER_SECTION"]-st.session_state["SPARE_OUTGOINGS_PER_SECTION"],
-                        max_distance_limit=st.session_state["MAX_DISTANCE_TO_PANEL"],
-                        dxf_outputfile=output_dxf_path,
-                        panel_side=st.session_state["PANEL_BLOCK_SIZE"],
-                        circuit_radius=st.session_state["CIRCUIT_BLOCK_SIZE"],
-                        square_size=st.session_state["GROUP_BLOCK_SIZE"],
-                        text_height=st.session_state["BLOCK_TEXT_SIZE"],
-                        grouping=st.session_state["DXF_GROUPING"]
-                    )
+                    # Redirect stdout to capture terminal output
+                    with redirect_stdout(stdout_buffer):
+                        # Use the execute_full_process function with all parameters
+                        execute_full_process(
+                            input_file_path,
+                            output_xlsx_path,
+                            chain_type=st.session_state["CHAIN_TYPE"],
+                            init_radius=st.session_state["INIT_RADIUS"],
+                            radius_step=st.session_state["RADIUS_STEP"],
+                            max_iterations=st.session_state["MAX_ITERATIONS"],
+                            max_current_per_group=st.session_state["MAX_CB_CURRENT"],
+                            max_circuit_per_group=st.session_state["MAX_CIRCUIT_PER_GROUP"],
+                            mb_phase=st.session_state["MB_PHASE"],
+                            panel_type=st.session_state["PANEL_TYPE"],
+                            sections_per_panel=st.session_state["SECTIONS_PER_PANEL"],
+                            max_outgoings_per_section=st.session_state["OUTGOINGS_PER_SECTION"] - st.session_state[
+                                "SPARE_OUTGOINGS_PER_SECTION"],
+                            max_distance_limit=st.session_state["MAX_DISTANCE_TO_PANEL"],
+                            dxf_outputfile=output_dxf_path,
+                            panel_side=st.session_state["PANEL_BLOCK_SIZE"],
+                            circuit_radius=st.session_state["CIRCUIT_BLOCK_SIZE"],
+                            square_size=st.session_state["GROUP_BLOCK_SIZE"],
+                            text_height=st.session_state["BLOCK_TEXT_SIZE"],
+                            grouping=st.session_state["DXF_GROUPING"]
+                        )
+
+                    # Store the captured terminal output
+                    st.session_state.terminal_output = stdout_buffer.getvalue()
 
                     with open(output_xlsx_path, "rb") as f1:
                         st.session_state["xlsx_bytes"] = f1.read()
@@ -191,6 +211,14 @@ with tab1:
     # Download Results
     if "xlsx_bytes" in st.session_state and "dxf_bytes" in st.session_state:
         st.success("✅ Processing complete. Download your files below:")
+
+        # Show terminal output in expandable section that's open by default
+        with st.expander("Terminal Output", expanded=True):
+            st.text(st.session_state.terminal_output)
+
+
+        # Download buttons...
+
 
         col1, col2 = st.columns([3, 1])
 
